@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能业务助手</title>
+  <style>
+    :root {
+      --bg-top: #e8f5ff;
+      --bg-bottom: #f7fbff;
+      --panel: rgba(255, 255, 255, 0.92);
+      --panel-strong: #ffffff;
+      --ink: #17324d;
+      --muted: #64809d;
+      --primary: #4b9fff;
+      --primary-deep: #2f7fe4;
+      --primary-soft: #e8f3ff;
+      --line: rgba(75, 159, 255, 0.18);
+      --shadow: 0 24px 64px rgba(48, 112, 188, 0.14);
+      --danger: #d15858;
+      --warn: #d48b32;
+      --ok: #2f9a76;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(75, 159, 255, 0.18), transparent 24%),
+        radial-gradient(circle at top right, rgba(138, 205, 255, 0.30), transparent 26%),
+        linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+    }
+
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 26px 16px 30px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #4b9fff, #7cc7ff);
+      box-shadow: 0 16px 30px rgba(75, 159, 255, 0.28);
+    }
+
+    .brand h1 {
+      margin: 0 0 4px;
+      font-size: clamp(24px, 4vw, 32px);
+      line-height: 1.05;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .shell {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.76);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.35)),
+        linear-gradient(135deg, rgba(75,159,255,0.10), rgba(124,199,255,0.08));
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(75, 159, 255, 0.12);
+      color: var(--primary-deep);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .hero h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.25;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+      max-width: 720px;
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .pill,
+    .ghost,
+    .send,
+    .outline {
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .pill:hover,
+    .ghost:hover,
+    .send:hover,
+    .outline:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(58, 118, 190, 0.12);
+    }
+
+    .pill {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(75, 159, 255, 0.16);
+      color: var(--ink);
+    }
+
+    .chat-header {
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.68);
+    }
+
+    .chat-header strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .chat-header span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary-deep);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .status.offline {
+      background: rgba(209, 88, 88, 0.12);
+      color: var(--danger);
+    }
+
+    .chat-body {
+      min-height: 540px;
+      max-height: 62vh;
+      overflow-y: auto;
+      padding: 22px 20px 10px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.36), rgba(255,255,255,0.12));
+    }
+
+    .message {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      animation: fadeUp 180ms ease;
+    }
+
+    .message.user {
+      flex-direction: row-reverse;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 40px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .avatar.bot {
+      background: linear-gradient(135deg, rgba(75,159,255,0.16), rgba(124,199,255,0.20));
+      color: var(--primary-deep);
+    }
+
+    .avatar.user {
+      background: rgba(225, 238, 248, 0.92);
+      color: #4c6886;
+    }
+
+    .bubble-wrap {
+      max-width: 82%;
+    }
+
+    .bubble {
+      padding: 15px 16px;
+      border-radius: 20px;
+      line-height: 1.75;
+      font-size: 15px;
+      white-space: pre-wrap;
+      background: var(--panel-strong);
+      border: 1px solid rgba(75, 159, 255, 0.10);
+    }
+
+    .message.user .bubble {
+      background: linear-gradient(135deg, #4b9fff, #6ab4ff);
+      color: #fff;
+      border-color: transparent;
+      border-top-right-radius: 8px;
+    }
+
+    .message.bot .bubble {
+      border-top-left-radius: 8px;
+    }
+
+    .bubble-meta {
+      display: none;
+    }
+
+    .typing {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid rgba(75, 159, 255, 0.10);
+    }
+
+    .typing span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #91bdf2;
+      animation: pulse 1s infinite ease-in-out;
+    }
+
+    .typing span:nth-child(2) { animation-delay: 0.18s; }
+    .typing span:nth-child(3) { animation-delay: 0.36s; }
+
+    .composer {
+      padding: 16px 20px 20px;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,0.76);
+    }
+
+    .composer-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 15px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(75, 159, 255, 0.18);
+      background: #fff;
+      outline: none;
+      font: inherit;
+      color: var(--ink);
+    }
+
+    input[type="text"]:focus {
+      border-color: rgba(75, 159, 255, 0.5);
+      box-shadow: 0 0 0 4px rgba(75, 159, 255, 0.10);
+    }
+
+    .send {
+      padding: 0 20px;
+      border-radius: 18px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), #7cc7ff);
+    }
+
+    .outline,
+    .ghost {
+      padding: 0 18px;
+      border-radius: 18px;
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid rgba(75, 159, 255, 0.16);
+    }
+
+    .composer-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .composer-note strong {
+      color: var(--ink);
+    }
+
+    .cta-bar {
+      display: none;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      margin-top: 14px;
+      padding: 10px 0 0;
+      border-top: 1px solid rgba(75, 159, 255, 0.10);
+      align-items: center;
+    }
+
+    .cta-bar.active {
+      display: grid;
+    }
+
+    .cta-copy strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .cta-copy span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .cta-btn {
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 16px;
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+    }
+
+    .cta-btn.primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), #7cc7ff);
+    }
+
+    .cta-btn.secondary {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid rgba(75, 159, 255, 0.16);
+    }
+
+    .cta-btn:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: min(420px, 100vw);
+      height: 100vh;
+      background: rgba(250, 253, 255, 0.98);
+      border-left: 1px solid rgba(75, 159, 255, 0.14);
+      box-shadow: -18px 0 40px rgba(58, 118, 190, 0.14);
+      transform: translateX(100%);
+      transition: transform 220ms ease;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-head {
+      padding: 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .drawer-head h3 {
+      margin: 0 0 4px;
+      font-size: 18px;
+    }
+
+    .drawer-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .drawer-body {
+      padding: 18px 20px 24px;
+      overflow-y: auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    .audit-card {
+      padding: 16px;
+      border-radius: 20px;
+      background: #fff;
+      border: 1px solid rgba(75, 159, 255, 0.10);
+    }
+
+    .audit-card h4 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .audit-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 13px;
+    }
+
+    .metrics-card {
+      display: none;
+    }
+
+    .risk-high { color: var(--danger); }
+    .risk-mid { color: var(--warn); }
+    .risk-low { color: var(--ok); }
+
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.35; transform: translateY(0); }
+      40% { opacity: 1; transform: translateY(-2px); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        padding: 12px 10px 16px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .top-actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .chat-body {
+        min-height: 460px;
+        max-height: none;
+      }
+
+      .composer-row {
+        grid-template-columns: 1fr;
+      }
+
+      .bubble-wrap {
+        max-width: 100%;
+      }
+
+      .cta-bar {
+        grid-template-columns: 1fr;
+      }
+
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">AI</div>
+        <div>
+          <h1>智能业务助手</h1>
+          <p>面向客户的融资咨询助手，能根据你的问题和文档要求继续追问、判断风险并生成建议。</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="resetBtn" class="outline">重新开始</button>
+        <button id="analysisBtn" class="ghost">查看完整分析</button>
+      </div>
+    </div>
+
+    <section class="shell">
+      <div class="hero">
+        <div class="eyebrow">BUSINESS ASSISTANT</div>
+        <h2>说出你的经营情况，我来帮你判断怎么推进更合适。</h2>
+        <p>我会先理解你的资金需求，再根据经营情况补齐必要信息，给出建议方案、风险提示和下一步动作。</p>
+        <div class="suggestions">
+          <button class="pill" data-prompt="我下个月想扩大业务规模，但资金不够，怎么办？">扩张资金</button>
+          <button class="pill" data-prompt="我最近想贷款周转一下。">周转融资</button>
+          <button class="pill" data-prompt="月营业额 86 万，库存周转 46 天，想申请 30 万。">标准情况</button>
+          <button class="pill" data-prompt="我月营业额 18 万，库存周转 112 天，想申请 50 万。">高风险情况</button>
+        </div>
+      </div>
+
+      <div class="chat-header">
+        <div>
+          <strong>客户对话</strong>
+          <span>我会根据你提供的信息继续追问、判断风险并给出建议</span>
+        </div>
+        <div id="status" class="status">已准备就绪</div>
+      </div>
+
+      <div id="chatBody" class="chat-body"></div>
+
+      <div class="composer">
+        <div class="composer-row">
+          <input id="userInput" type="text" placeholder="输入问题，或直接输入企业客户的话。">
+          <button id="sendBtn" class="send">发送</button>
+          <button id="demoBtn" class="outline">快速示例</button>
+        </div>
+        <div class="composer-note">示例：`我想贷款周转一下`、`月营业额 86 万，库存周转 46 天，想申请 30 万`</div>
+        <div class="cta-bar">
+          <div class="cta-copy">
+            <strong id="ctaTitle">下一步建议</strong>
+            <span id="ctaHint">确认方向后再继续往下推进。</span>
+          </div>
+          <button id="materialsBtn" class="cta-btn secondary" disabled>准备资料</button>
+          <button id="applyBtn" class="cta-btn primary" disabled>提交申请</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div>
+        <h3>完整分析</h3>
+        <p>输入、抽取事实、调用链路、推荐逻辑、风险检查</p>
+      </div>
+      <button id="closeDrawerBtn" class="outline">关闭</button>
+    </div>
+    <div class="drawer-body">
+      <section class="audit-card">
+        <h4>抽取事实</h4>
+        <ul id="factsList"></ul>
+      </section>
+      <section class="audit-card">
+        <h4>文档依据</h4>
+        <ul id="sourcesList"></ul>
+      </section>
+      <section class="audit-card">
+        <h4>审计记录</h4>
+        <ul id="auditList"></ul>
+      </section>
+      <section class="audit-card metrics-card">
+        <h4>关键指标</h4>
+        <div id="metricsGrid" class="metric-grid"></div>
+      </section>
+    </div>
+  </aside>
+
+  <script>
+    const docKnowledge = {
+      mustShow: [
+        "意图识别：识别“资金不够 / 想贷款 / 周转”等表达，并归类为融资/资金需求。",
+        "信息补齐：缺少营业额、库存周转、目标金额时，通过自然对话追问。",
+        "方案推荐：给出产品类型、建议额度、周期和预估成本。",
+        "风险告知：展示 2-3 个风险项和必要阻断项。",
+        "审计记录：支持查看输入、抽取事实、调用链路、推荐逻辑、风险检查。",
+        "异常处理：拒绝直接申请或自动审批，改为合规引导。"
+      ],
+      conversation: [
+        "3 轮标准对话",
+        "信息充足与信息不足两个分支",
+        "高风险婉拒",
+        "自动审批拒绝"
+      ],
+      metrics: [
+        "意图识别命中率",
+        "信息补齐完成率",
+        "推荐方案查看率",
+        "风险阻断分布",
+        "提交申请 CTA 点击率"
+      ],
+      coreScenario: "企业客户输入“我下个月想扩大业务规模，但资金不够，怎么办？”，系统要在 3 轮内给出清晰、可信、可执行的业务建议。"
+    };
+
+    const state = {
+      facts: {
+        intent: "待识别",
+        goal: "未知",
+        revenue: null,
+        turnover: null,
+        amount: null,
+        risk: "待评估",
+        eligibility: "未判断"
+      },
+      sources: [],
+      audit: [],
+      messages: [],
+      awaiting: null,
+      lastMissing: [],
+      lastRecommendation: null,
+      lastMode: null,
+      replyCursor: 0,
+      round: 0,
+      lastUserInput: "",
+      llm: {
+        enabled: false,
+        provider: "local",
+        model: "规则引擎",
+        lastError: ""
+      },
+      ctaState: "collecting",
+      checklist: [],
+      metrics: {
+        intentHit: "未命中",
+        completion: "0/3",
+        recommendation: "未生成",
+        cta: "未激活"
+      }
+    };
+
+    const chatBody = document.getElementById("chatBody");
+    const userInput = document.getElementById("userInput");
+    const statusEl = document.getElementById("status");
+    const drawer = document.getElementById("drawer");
+    const factsList = document.getElementById("factsList");
+    const sourcesList = document.getElementById("sourcesList");
+    const auditList = document.getElementById("auditList");
+    const metricsGrid = document.getElementById("metricsGrid");
+    const sendBtn = document.getElementById("sendBtn");
+    const applyBtn = document.getElementById("applyBtn");
+    const materialsBtn = document.getElementById("materialsBtn");
+    const ctaTitle = document.getElementById("ctaTitle");
+    const ctaHint = document.getElementById("ctaHint");
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function setStatusOffline(isOffline) {
+      statusEl.classList.toggle("offline", Boolean(isOffline));
+    }
+
+    function containsAny(text, terms) {
+      return terms.some(term => text.includes(term));
+    }
+
+    function pickVariant(options) {
+      const value = options[state.replyCursor % options.length];
+      state.replyCursor += 1;
+      return value;
+    }
+
+    function formatMoneyWan(num) {
+      return `¥${num}万`;
+    }
+
+    function toNumber(value) {
+      if (value === null || value === undefined) return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function moneyMatches(text) {
+      const matches = [];
+      const regex = /(\d+(?:\.\d+)?)\s*万/g;
+      let match;
+      while ((match = regex.exec(text))) {
+        matches.push({ value: Number(match[1]), index: match.index });
+      }
+      return matches;
+    }
+
+    function pickMoneyByContext(text, keywords) {
+      const matches = moneyMatches(text);
+      for (const item of matches) {
+        const windowStart = Math.max(0, item.index - 8);
+        const windowEnd = Math.min(text.length, item.index + 10);
+        const windowText = text.slice(windowStart, windowEnd);
+        if (keywords.some(keyword => windowText.includes(keyword))) {
+          return item.value;
+        }
+      }
+      return null;
+    }
+
+    function extractTurnover(text) {
+      const match = text.match(/(\d+(?:\.\d+)?)\s*天/);
+      return match ? Number(match[1]) : null;
+    }
+
+    function mergeFacts(text) {
+      const patch = {};
+
+      if (containsAny(text, ["资金不够", "贷款", "融资", "周转", "借款", "缺钱", "垫资"])) {
+        patch.intent = "融资/资金需求";
+      }
+
+      if (containsAny(text, ["扩店", "新店", "扩大业务", "扩大规模", "扩张", "开分店", "备货"])) {
+        patch.goal = containsAny(text, ["2 家", "两家", "两店"]) ? "扩 2 家店" : "扩大业务";
+        if (patch.intent !== "融资/资金需求") {
+          patch.intent = "融资/资金需求";
+        }
+      }
+
+      const revenue = pickMoneyByContext(text, ["营业额", "营收", "月销", "月营业", "流水", "销售额"]);
+      let amount = pickMoneyByContext(text, ["申请", "额度", "贷款", "资金", "借", "周转", "缺口"]);
+      const turnover = extractTurnover(text);
+      const allMoney = moneyMatches(text);
+
+      if (amount === null && allMoney.length === 1 && containsAny(text, ["想", "要", "申请", "贷", "借"])) {
+        amount = allMoney[0].value;
+      }
+
+      if (revenue !== null) patch.revenue = revenue;
+      if (amount !== null) patch.amount = amount;
+      if (turnover !== null && containsAny(text, ["周转", "库存"])) patch.turnover = turnover;
+
+      Object.assign(state.facts, patch);
+      return patch;
+    }
+
+    function classifyIntent(text) {
+      if (containsAny(text, ["查看完整分析", "完整分析", "审计", "分析记录"])) return "audit";
+      if (containsAny(text, ["文档", "要求", "交付", "异常分支", "3轮", "埋点"])) return "doc";
+      if (containsAny(text, ["资金不够", "贷款", "融资", "周转", "借款", "缺钱", "申请", "扩大业务", "扩店", "开店", "备货"])) return "finance";
+      if (state.facts.intent === "融资/资金需求") return "finance";
+      return "general";
+    }
+
+    function missingFields() {
+      const missing = [];
+      if (state.facts.revenue === null) missing.push("月营业额");
+      if (state.facts.turnover === null) missing.push("库存周转");
+      if (state.facts.amount === null) missing.push("目标金额");
+      return missing;
+    }
+
+    function addAudit(text) {
+      state.audit.unshift(text);
+      state.audit = state.audit.slice(0, 10);
+      renderAnalysis();
+    }
+
+    function setSources(items) {
+      state.sources = items;
+      renderAnalysis();
+    }
+
+    function renderAnalysis() {
+      const facts = state.facts;
+      const riskClass = facts.risk.includes("高")
+        ? "risk-high"
+        : facts.risk.includes("中")
+          ? "risk-mid"
+          : "risk-low";
+
+      factsList.innerHTML = `
+        <li>输入：${state.lastUserInput || "暂无"}</li>
+        <li>意图：${facts.intent}</li>
+        <li>扩张目标：${facts.goal}</li>
+        <li>月营业额：${facts.revenue === null ? "未知" : formatMoneyWan(facts.revenue)}</li>
+        <li>库存周转：${facts.turnover === null ? "未知" : `${facts.turnover} 天`}</li>
+        <li>目标金额：${facts.amount === null ? "未知" : formatMoneyWan(facts.amount)}</li>
+        <li>风险等级：<span class="${riskClass}">${facts.risk}</span></li>
+        <li>准入结论：${facts.eligibility}</li>
+      `;
+
+      sourcesList.innerHTML = state.sources.length
+        ? state.sources.map(item => `<li>${item}</li>`).join("")
+        : "<li>暂无命中文档规则</li>";
+
+      auditList.innerHTML = state.audit.length
+        ? state.audit.map(item => `<li>${item}</li>`).join("")
+        : "<li>暂无审计记录</li>";
+
+      metricsGrid.innerHTML = [
+        { value: state.metrics.intentHit, label: "融资意图识别" },
+        { value: state.metrics.completion, label: "信息补齐进度" },
+        { value: state.metrics.recommendation, label: "推荐状态" },
+        { value: state.metrics.cta, label: "下一步动作" }
+      ].map(item => `
+        <div class="metric">
+          <strong>${item.value}</strong>
+          <span>${item.label}</span>
+        </div>
+      `).join("");
+    }
+
+    function refreshMetrics() {
+      const completed = [state.facts.revenue, state.facts.turnover, state.facts.amount]
+        .filter(value => value !== null).length;
+      state.metrics.intentHit = state.facts.intent === "融资/资金需求" ? "已命中" : "未命中";
+      state.metrics.completion = `${completed}/3`;
+      state.metrics.recommendation = state.lastRecommendation
+        ? state.lastRecommendation.type === "block" ? "高风险阻断" : "已生成方案"
+        : "未生成";
+      state.metrics.cta = state.ctaState === "apply"
+        ? "可提交申请"
+        : state.ctaState === "materials"
+          ? "可准备资料"
+          : state.ctaState === "blocked"
+            ? "引导二次评估"
+            : "待补信息";
+      renderAnalysis();
+    }
+
+    function refreshCtaBar() {
+      const shouldShow = state.ctaState !== "collecting";
+      document.querySelector(".cta-bar").classList.toggle("active", shouldShow);
+      applyBtn.disabled = true;
+      materialsBtn.disabled = true;
+
+      if (state.ctaState === "apply") {
+        ctaTitle.textContent = "下一步建议";
+        ctaHint.textContent = "可以先看资料清单，确认方向后再进入正式申请流程。";
+        applyBtn.disabled = false;
+        materialsBtn.disabled = false;
+        return;
+      }
+
+      if (state.ctaState === "materials") {
+        ctaTitle.textContent = "可以先准备资料";
+        ctaHint.textContent = "先把经营流水、库存计划和目标金额口径整理清楚。";
+        materialsBtn.disabled = false;
+        return;
+      }
+
+      if (state.ctaState === "blocked") {
+        ctaTitle.textContent = "当前不建议直接申请";
+        ctaHint.textContent = "建议先按调整方向处理，再结合新数据重新评估。";
+        materialsBtn.disabled = false;
+        return;
+      }
+
+      ctaTitle.textContent = "下一步建议";
+      ctaHint.textContent = "确认方向后再继续往下推进。";
+    }
+
+    function refreshDecisionState() {
+      if (state.lastRecommendation?.type === "recommend") {
+        state.ctaState = "apply";
+      } else if (state.lastRecommendation?.type === "block") {
+        state.ctaState = "blocked";
+      } else if (missingFields().length === 0) {
+        state.ctaState = "materials";
+      } else {
+        state.ctaState = "collecting";
+      }
+      refreshCtaBar();
+      refreshMetrics();
+    }
+
+    function llmSummaryText() {
+      return "";
+    }
+
+    async function refreshModelHealth() {
+      try {
+        const response = await fetch("/api/health", { cache: "no-store" });
+        if (!response.ok) throw new Error(`health ${response.status}`);
+        const payload = await response.json();
+        state.llm.enabled = Boolean(payload.enabled);
+        state.llm.provider = payload.provider || "DeepSeek";
+        state.llm.model = payload.model || "deepseek-chat";
+        state.llm.lastError = "";
+        setStatusOffline(false);
+      } catch (error) {
+        state.llm.enabled = false;
+        state.llm.provider = "local";
+        state.llm.model = "规则引擎";
+        state.llm.lastError = error instanceof Error ? error.message : String(error);
+        setStatusOffline(true);
+      }
+    }
+
+    async function enhanceReplyWithModel(userText, fallbackReply) {
+      if (!state.llm.enabled) return fallbackReply;
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: state.messages,
+          userText,
+          fallbackReply,
+          facts: state.facts,
+          sources: state.sources,
+          audit: state.audit.slice(0, 5),
+          round: state.round,
+          lastMode: state.lastMode
+        })
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || `chat ${response.status}`);
+      }
+
+      const payload = await response.json();
+      return typeof payload.reply === "string" && payload.reply.trim()
+        ? payload.reply.trim()
+        : fallbackReply;
+    }
+
+    function addMessage(role, text, meta = "") {
+      const wrapper = document.createElement("div");
+      wrapper.className = `message ${role}`;
+      wrapper.innerHTML = `
+        <div class="avatar ${role === "bot" ? "bot" : "user"}">${role === "bot" ? "AI" : "客"}</div>
+        <div class="bubble-wrap">
+          <div class="bubble">${text}</div>
+          ${meta ? `<div class="bubble-meta">${meta}</div>` : ""}
+        </div>
+      `;
+      chatBody.appendChild(wrapper);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function showTyping() {
+      const wrapper = document.createElement("div");
+      wrapper.className = "message bot";
+      wrapper.id = "typingMessage";
+      wrapper.innerHTML = `
+        <div class="avatar bot">AI</div>
+        <div class="bubble-wrap">
+          <div class="typing"><span></span><span></span><span></span></div>
+        </div>
+      `;
+      chatBody.appendChild(wrapper);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function hideTyping() {
+      const el = document.getElementById("typingMessage");
+      if (el) el.remove();
+    }
+
+    function dynamicIntro(questionType) {
+      if (questionType === "doc") return pickVariant(["我先帮您理一理。", "我先给您说清楚。"]);
+      if (questionType === "finance") return pickVariant(["我理解您现在是想尽快把方向看清楚。", "我先站在您现在的处境里，帮您把这件事捋一捋。"]);
+      return "您先别着急，我先了解一下您的情况。";
+    }
+
+    function knownFactsText() {
+      const known = [];
+      if (state.facts.goal !== "未知") known.push(`目标是${state.facts.goal}`);
+      if (state.facts.revenue !== null) known.push(`月营业额大约${formatMoneyWan(state.facts.revenue)}`);
+      if (state.facts.turnover !== null) known.push(`库存周转${state.facts.turnover}天`);
+      if (state.facts.amount !== null) known.push(`目标金额${formatMoneyWan(state.facts.amount)}`);
+      return known.length ? known.join("，") : "";
+    }
+
+    function explainRecommendation(plan) {
+      const reasons = [];
+      if (state.facts.revenue !== null && state.facts.amount !== null) {
+        const ratio = state.facts.amount / state.facts.revenue;
+        if (ratio <= 0.4) reasons.push("申请金额没有明显超出当前经营体量");
+        else if (ratio <= 0.8) reasons.push("金额略积极，但还在可以讨论的范围内");
+      }
+      if (state.facts.turnover !== null) {
+        if (state.facts.turnover <= 60) reasons.push("库存周转速度还不错，适合做短周期安排");
+        else reasons.push("库存周转有一定压力，所以我更倾向保守一点的周期");
+      }
+      if (state.facts.goal !== "未知") {
+        reasons.push("您现在的诉求更像扩张前的周转，而不是长期重资产投入");
+      }
+      return reasons.slice(0, 3);
+    }
+
+    function followupSuggestions() {
+      return pickVariant([
+        "如果您愿意，我可以继续帮您把风险点和下一步资料再拆得更清楚一点。",
+        "如果您想继续，我可以接着帮您把申请前要准备的东西梳理出来。",
+        "要是您方便，我下一步可以直接把资料清单和推进顺序一起整理给您。"
+      ]);
+    }
+
+    function answerDoc(text) {
+      state.lastMode = "doc";
+      if (containsAny(text, ["必须演示", "哪些能力", "哪些功能"])) {
+        setSources([
+          "产品级功能要求（必须演示）",
+          "意图识别、信息补齐、方案推荐、风险告知、审计记录、异常处理"
+        ]);
+        addAudit("文档问答：输出必须演示能力");
+        return "按照文档，这个助手必须演示 6 件事：识别融资意图、自然追问补齐信息、给出方案推荐、说明风险、保留审计记录，以及在用户要求直接申请时做合规拒绝。\n\n如果站在客户演示视角，最重要的是让人看到它不是只会回答，而是会判断、会追问、会给下一步。";
+      }
+
+      if (containsAny(text, ["3轮", "三轮"])) {
+        setSources([
+          "对话设计要求：3 轮标准对话",
+          "信息充足 vs 信息不足两个分支"
+        ]);
+        addAudit("文档问答：解释 3 轮设计");
+        return "3 轮设计可以这样理解：\n\n第 1 轮先识别用户是不是融资需求。\n第 2 轮根据缺什么补什么，如果信息已经够了就直接进入推荐。\n第 3 轮给出建议、风险和下一步动作。\n\n所以关键不是把轮次做满，而是让每一轮都推动决策往前走。";
+      }
+
+      if (containsAny(text, ["异常", "自动审批", "高风险"])) {
+        setSources([
+          "异常分支：高风险婉拒",
+          "异常分支：自动审批拒绝"
+        ]);
+        addAudit("文档问答：解释异常处理");
+        return "文档里要求的两个异常分支很明确。\n\n一类是高风险用户：要婉拒，但不能只说不行，还要给替代建议。\n另一类是要求直接申请或自动审批：必须拒绝越权，并引导回正式流程。\n\n这两类分支的作用，是让系统看起来像真正能落地的业务助手，而不是只会推销。";
+      }
+
+      if (containsAny(text, ["埋点", "转化"])) {
+        setSources([
+          "产品埋点要求",
+          "目标是优化转化率"
+        ]);
+        addAudit("文档问答：输出埋点建议");
+        return "如果严格按文档做埋点，建议至少跟踪 5 个位置：融资意图命中、信息补齐完成、方案被查看、风险阻断发生、提交申请按钮点击。\n\n这样才能知道用户究竟卡在了识别、补信息、看方案还是合规流程。";
+      }
+
+      setSources([
+        "核心场景设定",
+        "目标是在 3 轮内给出清晰、可信、可执行的建议"
+      ]);
+      addAudit("文档问答：返回核心场景");
+      return `${docKnowledge.coreScenario}\n\n换句话说，这份文档要的不是一个聊天窗口，而是一个能把“我缺钱”推进到“我知道该怎么办”的智能业务助手。`;
+    }
+
+    function costEstimate(amountWan, months) {
+      if (amountWan === null) return null;
+      const base = amountWan * months * 0.18;
+      const rounded = Math.max(0.8, Math.round(base * 10) / 10);
+      return rounded;
+    }
+
+    function riskSummary() {
+      const items = [];
+      if (state.facts.turnover !== null) {
+        if (state.facts.turnover > 90) {
+          items.push("库存周转偏慢，资金占压会拉高短期偿付压力");
+        } else if (state.facts.turnover > 60) {
+          items.push("库存周转略慢，建议先控制备货节奏");
+        } else {
+          items.push("库存周转相对健康，可支撑短周期融资");
+        }
+      }
+
+      if (state.facts.amount !== null && state.facts.revenue !== null) {
+        const ratio = state.facts.amount / state.facts.revenue;
+        if (ratio > 2) {
+          items.push("目标金额明显高于当前经营规模，首笔申请通过率会偏低");
+        } else if (ratio > 0.6) {
+          items.push("申请金额相对积极，建议预留更宽松的回款缓冲");
+        } else {
+          items.push("申请金额与现有经营体量基本匹配");
+        }
+      }
+
+      if (state.facts.goal !== "未知") {
+        items.push("扩张前建议把采购计划、营销预算和回款节奏联动起来");
+      }
+      return items.slice(0, 3);
+    }
+
+    function computeRoundLabel() {
+      if (state.lastMode !== "finance") return "已准备就绪";
+      if (state.round <= 1) return "第 1 轮：识别意图";
+      if (state.round === 2) return "第 2 轮：信息补齐";
+      return "第 3 轮：推荐与风险";
+    }
+
+    function updateRoundStatus() {
+      setStatus(computeRoundLabel());
+    }
+
+    function recommendPlan() {
+      const revenue = toNumber(state.facts.revenue);
+      const amount = toNumber(state.facts.amount);
+      const turnover = toNumber(state.facts.turnover);
+
+      if (revenue === null || amount === null || turnover === null) return null;
+
+      const highRisk = turnover > 90 || amount > revenue * 2;
+      if (highRisk) {
+        state.facts.risk = "高风险";
+        state.facts.eligibility = "暂不符合当前准入";
+        state.checklist = [
+          "近 3 个月经营流水",
+          "当前库存结构与去化计划",
+          "目标金额拆分与回款节奏"
+        ];
+        return {
+          type: "block",
+          headline: "当前不建议直接推进申请。",
+          blocker: [
+            turnover > 90 ? "库存周转超过 90 天" : null,
+            amount > revenue * 2 ? "目标金额显著高于月营业额" : null
+          ].filter(Boolean),
+          next: [
+            "先把库存周转压到 75 天以内",
+            "把首笔额度降到更稳妥的区间",
+            "两周后结合新数据重新评估"
+          ]
+        };
+      }
+
+      const suggestedAmount = Math.min(amount, Math.round(revenue * 0.35));
+      const months = turnover > 60 ? 2 : 3;
+      const cost = costEstimate(suggestedAmount, months);
+      state.facts.risk = turnover > 60 ? "中风险" : "中低风险";
+      state.facts.eligibility = "符合短期流动资金方案";
+      state.checklist = [
+        "最近 3 到 6 个月经营流水",
+        "当前库存明细与采购计划",
+        "新增门店或扩张预算拆分",
+        "主体资质与经营证明"
+      ];
+      return {
+        type: "recommend",
+        product: turnover > 60 ? "保守型短期周转方案" : "短期流动资金方案",
+        amount: suggestedAmount,
+        months,
+        cost,
+        risks: riskSummary()
+      };
+    }
+
+    function answerFinance(text) {
+      state.lastMode = "finance";
+      state.round += 1;
+      state.lastUserInput = text;
+      mergeFacts(text);
+      setSources([
+        "意图识别：融资/资金需求",
+        "信息补齐：缺少关键字段时自然追问",
+        "方案推荐 / 风险告知 / 异常处理 / 引导正式申请"
+      ]);
+      updateRoundStatus();
+
+      if (containsAny(text, ["直接帮我申请", "自动审批", "直接审批"])) {
+        state.facts.intent = "融资/资金需求";
+        state.facts.eligibility = "未进入申请";
+        state.lastRecommendation = null;
+        addAudit("异常处理：拒绝直接申请或自动审批");
+        refreshDecisionState();
+        return "我理解您现在是想尽快把事情往前推，这种心情我能理解。不过这一步我不能直接替您提交，也不能跳过审核。\n\n我更希望先帮您把方向判断清楚，免得您白走流程。您先告诉我：近 3 个月月营业额、库存周转情况，以及您希望申请的金额。";
+      }
+
+      state.facts.intent = "融资/资金需求";
+      addAudit("意图识别：命中融资/资金需求");
+
+      if (containsAny(text, ["为什么", "为什么这么判断", "依据是什么", "怎么判断"])) {
+        if (state.lastRecommendation && state.lastRecommendation.type === "recommend") {
+          const reasons = explainRecommendation(state.lastRecommendation);
+          addAudit("用户追问推荐依据");
+          return `您这么问很正常，我也跟您说透一点。我主要是从这几方面来看的：\n- ${reasons.join("\n- ")}\n\n所以我没有一上来就给特别激进的额度，而是更希望先帮您把节奏放稳，这样后面推进起来会更踏实。`;
+        }
+        if (state.lastRecommendation && state.lastRecommendation.type === "block") {
+          addAudit("用户追问阻断依据");
+          return `我先把您拦一下，不是想给您添麻烦，主要是因为：\n- ${state.lastRecommendation.blocker.join("\n- ")}\n\n如果这些问题还没缓过来就继续推进，后面大概率会更被动，我也不想让您白走一轮流程。`;
+        }
+      }
+
+      if (containsAny(text, ["还有别的方案", "其他方案", "别的办法"])) {
+        addAudit("用户追问替代方案");
+        if (state.facts.revenue !== null) {
+          const conservative = Math.max(10, Math.round(state.facts.revenue * 0.2));
+          return `如果您觉得现在直接推进心里没底，我也可以给您两个更稳一点的方向：\n- ${formatMoneyWan(conservative)} 左右的短周期周转方案，先小一点试额度\n- 先不急着上融资，先把库存和采购节奏调顺，再过两周重看一次\n\n这样走会更保守一些，但对您来说也更安心。`;
+        }
+      }
+
+      if (containsAny(text, ["风险", "哪里有风险"])) {
+        const risks = riskSummary();
+        addAudit("用户追问风险解释");
+        return risks.length
+          ? `如果站在帮您把风险提前看清的角度，我现在最担心的是这几件事：\n- ${risks.join("\n- ")}`
+          : "我可以跟您把风险说清楚，不过还需要先知道月营业额、库存周转和目标金额，这样判断会更靠谱，也更对您负责。";
+      }
+
+      if (containsAny(text, ["下一步", "怎么申请", "准备什么资料"])) {
+        addAudit("用户追问下一步动作");
+        return "如果您想往下走，我建议分两步来，这样会更稳：\n1. 先把月营业额、库存周转、目标金额这 3 个核心信息确认清楚\n2. 如果方向合适，再点“准备资料”，把经营流水、库存计划、扩张预算和主体资质整理出来\n\n我会尽量帮您把方向判断清楚，但不会直接替您提交申请。";
+      }
+
+      if (containsAny(text, ["好的", "可以", "明白", "那行"])) {
+        if (state.lastRecommendation && state.lastRecommendation.type === "recommend") {
+          addAudit("用户接受推荐，系统推进下一步");
+          return `好，那我们就一步一步往前走。您接下来可以优先准备这几类资料：\n- 最近 3 到 6 个月经营流水\n- 当前库存和采购计划\n- 扩张预算拆分\n- 主体资质材料\n\n这些先准备好，后面无论正式申请还是内部评估，都会顺很多。`;
+        }
+      }
+
+      const missing = missingFields();
+      if (missing.length) {
+        state.awaiting = "financeFacts";
+        const resolved = state.lastMissing.filter(item => !missing.includes(item));
+        state.lastMissing = missing.slice();
+        addAudit(`信息补齐：待补字段 ${missing.join("、")}`);
+        refreshDecisionState();
+        const promptMap = {
+          "月营业额": "近 3 个月平均月营业额",
+          "库存周转": "库存周转天数或快慢",
+          "目标金额": "您大概希望申请的金额"
+        };
+        const askLines = missing.map((item, index) => `${index + 1}. ${promptMap[item]}`);
+        const acknowledged = resolved.length ? `我先记下您刚补充的${resolved.join("、")}。` : "";
+        const known = knownFactsText();
+        return `${dynamicIntro("finance")}\n\n${acknowledged}${known ? `目前我已经知道：${known}。` : "我大致明白您现在的情况了。"}\n\n为了尽量把建议说得更准、更贴近您实际能推进的节奏，我这边还想再确认几项：\n${askLines.join("\n")}\n\n您可以直接一句话回复，例如：月营业额 86 万，库存周转 46 天，想申请 30 万。`;
+      }
+
+      const plan = recommendPlan();
+      if (!plan) {
+        addAudit("推荐前校验失败：信息仍不完整");
+        refreshDecisionState();
+        return "我这边还差一点关键信息，才能把建议给得更稳一些。您把月营业额、库存周转和目标金额补齐，我马上接着帮您看。";
+      }
+
+      if (plan.type === "block") {
+        state.lastRecommendation = plan;
+        addAudit("风控判断：高风险婉拒");
+        refreshDecisionState();
+        const riskItems = riskSummary();
+        return `${dynamicIntro("finance")}\n\n说实话，如果站在替您把后面风险提前拦住的角度，我不太建议您现在直接往前推。\n\n我担心的点主要有：\n- ${riskItems.join("\n- ")}\n\n眼下最关键的卡点是：\n- ${plan.blocker[0] || "当前资质不满足准入阈值"}\n\n如果您愿意，我更建议您先这样调整：\n- ${plan.next.join("\n- ")}\n\n这样做虽然会慢一点，但对您来说会更稳，后面也更有把握。`;
+      }
+
+      state.lastRecommendation = plan;
+      state.lastMissing = [];
+      addAudit("方案推荐：生成额度、周期、成本和风险提示");
+      refreshDecisionState();
+      const reasons = explainRecommendation(plan);
+      return `${dynamicIntro("finance")}\n\n如果按您现在的数据来判断，我会更倾向推荐“${plan.product}”。\n\n我先给您一个相对稳妥、也更贴近您当前情况的建议：\n- 建议额度：${formatMoneyWan(plan.amount)}\n- 使用周期：${plan.months} 个月\n- 预估综合成本：约 ¥${plan.cost}万\n\n您也要留意这几件事：\n- ${plan.risks.join("\n- ")}\n\n我这样判断，主要是因为：\n- ${reasons.join("\n- ")}\n\n下一步建议先点“准备资料”，把资料清单看一眼；如果您觉得方向合适，我们再进入正式申请流程。\n\n${followupSuggestions()}`;
+    }
+
+    function answerAudit() {
+      state.lastMode = "audit";
+      setSources([
+        "审计记录要求：输入 → 抽取事实 → 调用链路 → 推荐逻辑 → 风险检查"
+      ]);
+      addAudit("用户查看完整分析");
+      openDrawer();
+      return "我把这次判断的来龙去脉给您展开了。您可以看到我刚才是怎么理解您的问题、抓了哪些关键信息、为什么会这样建议，以及我在意的风险点。";
+    }
+
+    function answerGeneral(text) {
+      state.lastMode = "general";
+      setSources([
+        "核心场景设定",
+        "目标是在 3 轮内给出清晰、可信、可执行的建议"
+      ]);
+      addAudit("泛化咨询：引导回核心场景");
+      if (containsAny(text, ["你好", "在吗", "你好啊"])) {
+        return "在的，您慢慢说就行。无论您是想聊经营上的资金安排，还是想先判断当前适不适合推进，我都可以陪您一起往下梳理。";
+      }
+      if (containsAny(text, ["扩大业务", "下个月想扩大", "想做大一点"])) {
+        addAudit("泛化问题转融资引导");
+        state.facts.intent = "融资/资金需求";
+        return "如果您是想下个月把业务再往前推一推，我能理解您现在最关心的，肯定是钱够不够、这件事值不值得马上做。\n\n我通常会先看两件事：现在到底缺不缺钱，以及现有经营数据能不能撑住这次扩张。\n\n您可以继续告诉我月营业额、库存周转，或者直接说您现在大概还差多少钱。";
+      }
+      return "您可以把我当成一个先陪您把问题想清楚的人。\n\n如果您愿意，直接把经营情况，或者您现在最纠结的点发给我，我会站在您的角度，顺着帮您往下梳理。";
+    }
+
+    function showMaterialsChecklist() {
+      const checklist = state.checklist.length
+        ? state.checklist
+        : ["最近 3 个月经营流水", "库存周转情况", "目标金额与使用计划"];
+      addAudit("用户查看资料清单");
+      addMessage(
+        "bot",
+        `如果您准备往下推进，我建议先把这几类资料准备一下：\n- ${checklist.join("\n- ")}\n\n这些材料提前备齐，后面无论做正式申请还是二次评估，都会顺很多。`,
+        "依据：正式申请前下一步动作"
+      );
+      state.metrics.cta = "已查看资料";
+      renderAnalysis();
+    }
+
+    function showApplyGuidance() {
+      addAudit("用户触发提交申请 CTA");
+      addMessage(
+        "bot",
+        "如果您决定继续推进，我可以把您引导到正式提交流程，但这里不会替您自动发起申请，也不会代替审批。\n\n正式进入前，建议先确认资料齐全、金额口径一致，再由人工或正式系统继续处理，这样对您会更稳妥。",
+        "依据：合规边界 / 正式申请引导"
+      );
+      state.metrics.cta = "已触发申请引导";
+      renderAnalysis();
+    }
+
+    function generateResponse(text) {
+      const intent = classifyIntent(text);
+      if (intent === "doc") return answerDoc(text);
+      if (intent === "finance") return answerFinance(text);
+      if (intent === "audit") return answerAudit();
+      return answerGeneral(text);
+    }
+
+    async function sendMessage(text) {
+      const clean = text.trim();
+      if (!clean) return;
+      sendBtn.disabled = true;
+      state.messages.push({ role: "user", text: clean });
+      addMessage("user", clean);
+      setStatus("正在整理方案");
+      showTyping();
+
+      try {
+        await new Promise(resolve => window.setTimeout(resolve, 320));
+        const fallbackResponse = generateResponse(clean);
+        let finalResponse = fallbackResponse;
+        let meta = "";
+
+        if (state.llm.enabled) {
+          try {
+            finalResponse = await enhanceReplyWithModel(clean, fallbackResponse);
+            addAudit(`模型生成：${state.llm.provider}/${state.llm.model}`);
+          } catch (error) {
+            state.llm.lastError = error instanceof Error ? error.message : String(error);
+            addAudit(`模型异常：已回退本地规则（${state.llm.lastError}）`);
+            setStatusOffline(true);
+          }
+        }
+
+        hideTyping();
+        state.messages.push({ role: "bot", text: finalResponse });
+        addMessage("bot", finalResponse, meta);
+        updateRoundStatus();
+      } finally {
+        hideTyping();
+        sendBtn.disabled = false;
+      }
+    }
+
+    function resetState() {
+      state.facts = {
+        intent: "待识别",
+        goal: "未知",
+        revenue: null,
+        turnover: null,
+        amount: null,
+        risk: "待评估",
+        eligibility: "未判断"
+      };
+      state.sources = [];
+      state.audit = [];
+      state.messages = [];
+      state.awaiting = null;
+      state.lastMissing = [];
+      state.lastRecommendation = null;
+      state.lastMode = null;
+      state.replyCursor = 0;
+      state.round = 0;
+      state.lastUserInput = "";
+      state.ctaState = "collecting";
+      state.checklist = [];
+      state.metrics = {
+        intentHit: "未命中",
+        completion: "0/3",
+        recommendation: "未生成",
+        cta: "未激活"
+      };
+      renderAnalysis();
+    }
+
+    function resetDemo() {
+      resetState();
+      chatBody.innerHTML = "";
+      setStatus("已准备就绪");
+      setStatusOffline(!state.llm.enabled);
+      addMessage(
+        "bot",
+        "您好，我是智能业务助手。\n\n您可以直接告诉我现在的经营情况，或者直接说您想解决的资金问题。我会先站在您的角度把情况看清楚，再给您一个尽量稳妥、能落地的建议。\n\n比如：\n- 我下个月想扩大业务规模，但资金不够，怎么办？\n- 我最近想贷款周转一下。\n- 月营业额 86 万，库存周转 46 天，想申请 30 万。",
+        ""
+      );
+      setSources([
+        "核心场景设定",
+        "3 轮对话、方案推荐、风险告知、异常处理"
+      ]);
+      addAudit("会话初始化");
+      refreshDecisionState();
+      updateRoundStatus();
+      userInput.value = "";
+      userInput.focus();
+    }
+
+    function openDrawer() {
+      drawer.classList.add("open");
+      drawer.setAttribute("aria-hidden", "false");
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove("open");
+      drawer.setAttribute("aria-hidden", "true");
+    }
+
+    function playDemo() {
+      resetDemo();
+      const script = [
+        "我下个月想扩大业务规模，但资金不够，怎么办？",
+        "月营业额 86 万，库存周转 46 天，想申请 30 万。",
+        "准备什么资料"
+      ];
+      let delay = 250;
+      script.forEach(item => {
+        setTimeout(() => sendMessage(item), delay);
+        delay += 1100;
+      });
+    }
+
+    document.getElementById("sendBtn").addEventListener("click", () => {
+      sendMessage(userInput.value);
+      userInput.value = "";
+    });
+
+    document.getElementById("demoBtn").addEventListener("click", playDemo);
+    document.getElementById("resetBtn").addEventListener("click", resetDemo);
+    document.getElementById("analysisBtn").addEventListener("click", () => {
+      openDrawer();
+      addAudit("用户手动打开完整分析");
+    });
+    document.getElementById("closeDrawerBtn").addEventListener("click", closeDrawer);
+    materialsBtn.addEventListener("click", showMaterialsChecklist);
+    applyBtn.addEventListener("click", showApplyGuidance);
+
+    userInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        sendMessage(userInput.value);
+        userInput.value = "";
+      }
+    });
+
+    document.querySelectorAll("[data-prompt]").forEach(button => {
+      button.addEventListener("click", () => sendMessage(button.dataset.prompt));
+    });
+
+    window.addEventListener("load", async () => {
+      await refreshModelHealth();
+      resetDemo();
+    });
+  </script>
+</body>
+</html>

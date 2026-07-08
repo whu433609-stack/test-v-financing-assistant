@@ -1,0 +1,4 @@
+runtime: python
+name: 智能业务助手
+start: python server.py
+description: 融资咨询助手，支持意图识别、信息补齐、方案推荐、风险告知和申请前引导
