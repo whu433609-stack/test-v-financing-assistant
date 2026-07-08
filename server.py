@@ -11,8 +11,8 @@ from urllib import error, request
 
 
 ROOT = Path(__file__).resolve().parent
-HOST = os.getenv("HOST", os.getenv("DEMO_HOST", "127.0.0.1"))
 PORT = int(os.getenv("PORT", os.getenv("DEMO_PORT", "8766")))
+HOST = os.getenv("HOST", os.getenv("DEMO_HOST", "0.0.0.0" if os.getenv("PORT") else "127.0.0.1"))
 HTML_FILE = "智能业务助手_Demo.html"
 
 
